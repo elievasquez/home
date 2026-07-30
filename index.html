@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Startpage</title>
+  <title>Mi Home</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -36,7 +36,12 @@
 
   <!-- INFERIOR: NOTICIAS / FEEDS FRIKIS -->
   <footer class="news-section">
-    <h2>Últimas Noticias</h2>
+    <div class="news-header">
+      <h2>Últimas Noticias</h2>
+      <!-- Campo opcional para filtrar entre tus noticias cargadas -->
+      <input type="text" id="news-search" placeholder="Filtrar noticias..." autocomplete="off">
+    </div>
+
     <div id="news-container" class="news-grid">
       <!-- Las noticias se cargan dinámicamente aquí -->
     </div>
