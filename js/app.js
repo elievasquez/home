@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 2. Carga y Filtro de Noticias RSS
-  // Puedes usar Google News o cualquier otro feed
   const RSS_URL = 'https://www.xataka.com/index.xml';
   const newsContainer = document.getElementById('news-container');
   const newsSearch = document.getElementById('news-search');
@@ -41,21 +40,20 @@ document.addEventListener("DOMContentLoaded", () => {
     newsContainer.innerHTML = '';
 
     if (articles.length === 0) {
-      newsContainer.innerHTML = '<p style="grid-column: 1/-1;">Sin resultados para la búsqueda.</p>';
+      newsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Sin resultados para la búsqueda.</p>';
       return;
     }
 
     articles.forEach((item, index) => {
-      // 1. Intentar extraer imagen estándar del Feed
+      // Intentar obtener la imagen del objeto RSS o del HTML interno
       let imgUrl = item.thumbnail || 
-                     item.enclosure?.link || 
-                     item.enclosure?.url || 
-                     getImgFromHTML(item.description) ||
-                     getImgFromHTML(item.content);
+                   item.enclosure?.link || 
+                   item.enclosure?.url || 
+                   getImgFromHTML(item.description) ||
+                   getImgFromHTML(item.content);
 
       const cleanText = cleanHTML(item.description || item.content).substring(0, 100) + '...';
 
-      // Crear elemento HTML
       const card = document.createElement('article');
       card.className = 'news-card';
       const imgId = `news-img-${index}`;
@@ -69,26 +67,26 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
       newsContainer.appendChild(card);
 
-      // 2. Si no tenía imagen en el RSS, buscar la imagen og:image de la web
+      // Si no traía imagen en el RSS, buscamos la meta-etiqueta en la web original
       if (!imgUrl) {
         fetchOgImage(item.link, imgId);
       }
     });
   }
 
-  // Evento del filtro de noticias
+  // Filtro de noticias en tiempo real
   if (newsSearch) {
     newsSearch.addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase();
+      const q = e.target.value.toLowerCase().trim();
       const filtered = fetchedArticles.filter(art => 
-        art.title.toLowerCase().includes(q) || cleanHTML(art.description).toLowerCase().includes(q)
+        art.title.toLowerCase().includes(q) || cleanHTML(art.description || art.content).toLowerCase().includes(q)
       );
       renderNews(filtered);
     });
   }
 });
 
-// Función para obtener la imagen principal (og:image) de páginas que no la envían en el RSS
+// Extrae la imagen OG de la página de la noticia resolviendo rutas relativas
 function fetchOgImage(articleUrl, imgElementId) {
   const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(articleUrl)}`;
   
@@ -98,17 +96,24 @@ function fetchOgImage(articleUrl, imgElementId) {
       if (data.contents) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(data.contents, 'text/html');
-        const ogImage = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
-                         doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content');
+        let ogImage = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
+                       doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content');
         
         if (ogImage) {
+          // Convertir rutas relativas (/img/foto.jpg) a rutas absolutas (https://sitio.com/img/foto.jpg)
+          try {
+            ogImage = new URL(ogImage, articleUrl).href;
+          } catch (e) {
+            // Si la URL es inválida, se mantiene tal cual
+          }
+
           const imgEl = document.getElementById(imgElementId);
           if (imgEl) imgEl.src = ogImage;
         }
       }
     })
     .catch(() => {
-      // Si el sitio bloquea el scraper, mantiene la imagen de respaldo
+      // Mantiene la imagen de placeholder en caso de fallo
     });
 }
 
@@ -116,8 +121,15 @@ function fetchOgImage(articleUrl, imgElementId) {
 function getImgFromHTML(html) {
   if (!html) return null;
   const doc = new DOMParser().parseFromString(html, 'text/html');
-  const img = doc.querySelector('img');
-  return img ? img.src : null;
+  const imgs = doc.querySelectorAll('img');
+  
+  // Omitir imágenes de tracking/emojis analizando fuentes conocidas o tamaños
+  for (let img of imgs) {
+    if (img.src && !img.src.includes('feedsportal') && !img.src.includes('feedburner')) {
+      return img.src;
+    }
+  }
+  return null;
 }
 
 function cleanHTML(html) {
