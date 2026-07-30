@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 2. Carga y Filtro de Noticias RSS
   // Puedes usar Google News o cualquier otro feed
-  const RSS_URL = 'https://news.google.com/rss?hl=es-419&gl=CL&ceid=CL:es-419'; 
+  const RSS_URL = 'https://www.xataka.com/index.xml';
   const newsContainer = document.getElementById('news-container');
   const newsSearch = document.getElementById('news-search');
   
