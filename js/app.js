@@ -1,67 +1,92 @@
 document.addEventListener("DOMContentLoaded", () => {
-  initQuote();
-  initBackgroundSelector();
-  loadNews();
-});
+  // 1. Selector de Fondos
+  const bgSelect = document.getElementById('bg-select');
+  const mainHeader = document.getElementById('main-header');
 
-// 1. Cargar Frase Aleatoria
-function initQuote() {
-  const random = Math.floor(Math.random() * QUOTES.length);
-  document.getElementById("quote-text").innerText = `"${QUOTES[random].text}"`;
-  document.getElementById("quote-author").innerText = `- ${QUOTES[random].author}`;
-}
+  if (bgSelect && mainHeader) {
+    const changeBackground = (path) => {
+      mainHeader.style.backgroundImage = `url('${path}')`;
+    };
+    
+    // Carga inicial
+    changeBackground(bgSelect.value);
 
-// 2. Cambiar Imagen de Fondo
-function initBackgroundSelector() {
-  const select = document.getElementById("bg-select");
-  const header = document.getElementById("main-header");
-
-  // Establecer fondo inicial
-  header.style.backgroundImage = `url('${select.value}')`;
-
-  select.addEventListener("change", (e) => {
-    header.style.backgroundImage = `url('${e.target.value}')`;
-  });
-}
-
-// 3. Cargar Noticias RSS
-async function loadNews() {
-  const newsContainer = document.getElementById("news-container");
-  newsContainer.innerHTML = "<p>Cargando noticias...</p>";
-
-  let allArticles = [];
-
-  for (const feed of CONFIG.rssFeeds) {
-    try {
-      const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`);
-      const data = await res.json();
-      
-      if (data.status === 'ok') {
-        // Tomar los primeros 3 artículos de cada sitio
-        const items = data.items.slice(0, 3).map(item => ({
-          title: item.title,
-          link: item.link,
-          source: feed.name
-        }));
-        allArticles = allArticles.concat(items);
-      }
-    } catch (error) {
-      console.error(`Error cargando el feed: ${feed.name}`, error);
-    }
+    // Cambio en selector
+    bgSelect.addEventListener('change', (e) => {
+      changeBackground(e.target.value);
+    });
   }
 
-  // Renderizar noticias
-  newsContainer.innerHTML = "";
-  allArticles.forEach(article => {
-    const card = document.createElement("div");
-    card.className = "news-card";
-    card.innerHTML = `
-      <div>
-        <span class="source">${article.source}</span>
-        <h3>${article.title}</h3>
-      </div>
-      <a href="${article.link}" target="_blank" rel="noopener noreferrer">Leer más →</a>
-    `;
-    newsContainer.appendChild(card);
-  });
+  // 2. Carga y Filtro de Noticias RSS
+  const RSS_URL = 'https://news.google.com/rss?hl=es-419&gl=CL&ceid=CL:es-419'; 
+  const newsContainer = document.getElementById('news-container');
+  const newsSearch = document.getElementById('news-search');
+  
+  let fetchedArticles = [];
+
+  // Obtener feed vía rss2json
+  fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.status !== 'ok') throw new Error('Error RSS');
+      fetchedArticles = data.items;
+      renderNews(fetchedArticles);
+    })
+    .catch(err => {
+      console.error(err);
+      if (newsContainer) newsContainer.innerHTML = '<p>Error al cargar las noticias.</p>';
+    });
+
+  // Renderizar tarjetas
+  function renderNews(articles) {
+    if (!newsContainer) return;
+    newsContainer.innerHTML = '';
+
+    if (articles.length === 0) {
+      newsContainer.innerHTML = '<p style="grid-column: 1/-1;">Sin resultados para la búsqueda.</p>';
+      return;
+    }
+
+    articles.forEach(item => {
+      // Extraer imagen del item o del HTML embebido
+      let imgUrl = item.thumbnail || item.enclosure?.link || getImgFromHTML(item.description);
+      if (!imgUrl) imgUrl = 'https://via.placeholder.com/300x160?text=Noticia';
+
+      const cleanText = cleanHTML(item.description).substring(0, 100) + '...';
+
+      const card = document.createElement('article');
+      card.className = 'news-card';
+      card.innerHTML = `
+        <img src="${imgUrl}" alt="${item.title}" loading="lazy">
+        <div class="news-body">
+          <h3 class="news-title"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h3>
+          <p class="news-desc">${cleanText}</p>
+        </div>
+      `;
+      newsContainer.appendChild(card);
+    });
+  }
+
+  // Evento del filtro secundario de noticias
+  if (newsSearch) {
+    newsSearch.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = fetchedArticles.filter(art => 
+        art.title.toLowerCase().includes(q) || cleanHTML(art.description).toLowerCase().includes(q)
+      );
+      renderNews(filtered);
+    });
+  }
+});
+
+// Funciones Auxiliares
+function getImgFromHTML(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const img = doc.querySelector('img');
+  return img ? img.src : null;
+}
+
+function cleanHTML(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
 }
