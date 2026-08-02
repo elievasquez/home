@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(res => res.json())
         .then(data => {
           if (data.status !== 'ok') throw new Error(`Error al cargar ${feed.name}`);
-          // Etiquetamos cada noticia con el nombre de su fuente
-          return data.items.map(item => ({ ...item, sourceName: feed.name }));
+          // Etiquetamos cada noticia con el nombre de su fuente y su categoría
+          return data.items.map(item => ({ ...item, sourceName: feed.name, category: feed.category || '' }));
         })
     )
   ).then(results => {
@@ -94,7 +94,10 @@ document.addEventListener("DOMContentLoaded", () => {
       card.innerHTML = `
         <img id="${imgId}" src="${imgUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80'}" alt="${item.title}" loading="lazy">
         <div class="news-body">
-          ${item.sourceName ? `<span class="news-source">${item.sourceName}</span>` : ''}
+          <div class="news-tags">
+            ${item.sourceName ? `<span class="news-source">${item.sourceName}</span>` : ''}
+            ${item.category ? `<span class="news-category">${item.category}</span>` : ''}
+          </div>
           <h3 class="news-title"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h3>
           <p class="news-desc">${cleanText}</p>
         </div>
@@ -115,7 +118,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const filtered = fetchedArticles.filter(art => 
         art.title.toLowerCase().includes(q) || 
         cleanHTML(art.description || art.content).toLowerCase().includes(q) ||
-        (art.sourceName && art.sourceName.toLowerCase().includes(q))
+        (art.sourceName && art.sourceName.toLowerCase().includes(q)) ||
+        (art.category && art.category.toLowerCase().includes(q))
       );
       renderNews(filtered);
     });
