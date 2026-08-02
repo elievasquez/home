@@ -1,4 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // 0. Frase aleatoria (usa QUOTES definido en quotes.js)
+  const quoteText = document.getElementById('quote-text');
+  const quoteAuthor = document.getElementById('quote-author');
+
+  if (quoteText && quoteAuthor && typeof QUOTES !== 'undefined' && QUOTES.length > 0) {
+    const randomQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    quoteText.textContent = `"${randomQuote.text}"`;
+    quoteAuthor.textContent = `- ${randomQuote.author}`;
+  }
+
   // 1. Selector de Fondos
   const bgSelect = document.getElementById('bg-select');
   const mainHeader = document.getElementById('main-header');
@@ -15,24 +25,47 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 2. Carga y Filtro de Noticias RSS
-  const RSS_URL = 'https://www.animenewsnetwork.com/all/rss.xml?ann-edition=w';
+  // 2. Carga y Filtro de Noticias RSS (fuentes definidas en config.js)
   const newsContainer = document.getElementById('news-container');
   const newsSearch = document.getElementById('news-search');
-  
+  const feeds = (typeof CONFIG !== 'undefined' && CONFIG.rssFeeds) ? CONFIG.rssFeeds : [];
+
   let fetchedArticles = [];
 
-  fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.status !== 'ok') throw new Error('Error al cargar el RSS');
-      fetchedArticles = data.items;
-      renderNews(fetchedArticles);
-    })
-    .catch(err => {
-      console.error(err);
-      if (newsContainer) newsContainer.innerHTML = '<p>Error al cargar las noticias.</p>';
-    });
+  if (newsContainer && feeds.length === 0) {
+    newsContainer.innerHTML = '<p>No hay fuentes RSS configuradas en config.js.</p>';
+  }
+
+  // Se pide cada feed por separado y se combinan los resultados.
+  // Promise.allSettled evita que un solo feed caído rompa a los demás.
+  Promise.allSettled(
+    feeds.map(feed =>
+      fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status !== 'ok') throw new Error(`Error al cargar ${feed.name}`);
+          // Etiquetamos cada noticia con el nombre de su fuente
+          return data.items.map(item => ({ ...item, sourceName: feed.name }));
+        })
+    )
+  ).then(results => {
+    fetchedArticles = results
+      .filter(r => r.status === 'fulfilled')
+      .flatMap(r => r.value)
+      .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+    const failedFeeds = results.filter(r => r.status === 'rejected').length;
+    if (failedFeeds > 0) {
+      console.warn(`${failedFeeds} feed(s) no se pudieron cargar.`);
+    }
+
+    if (fetchedArticles.length === 0 && newsContainer) {
+      newsContainer.innerHTML = '<p>Error al cargar las noticias.</p>';
+      return;
+    }
+
+    renderNews(fetchedArticles);
+  });
 
   // Renderizar tarjetas
   function renderNews(articles) {
@@ -61,6 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.innerHTML = `
         <img id="${imgId}" src="${imgUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80'}" alt="${item.title}" loading="lazy">
         <div class="news-body">
+          ${item.sourceName ? `<span class="news-source">${item.sourceName}</span>` : ''}
           <h3 class="news-title"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h3>
           <p class="news-desc">${cleanText}</p>
         </div>
@@ -79,7 +113,9 @@ document.addEventListener("DOMContentLoaded", () => {
     newsSearch.addEventListener('input', (e) => {
       const q = e.target.value.toLowerCase().trim();
       const filtered = fetchedArticles.filter(art => 
-        art.title.toLowerCase().includes(q) || cleanHTML(art.description || art.content).toLowerCase().includes(q)
+        art.title.toLowerCase().includes(q) || 
+        cleanHTML(art.description || art.content).toLowerCase().includes(q) ||
+        (art.sourceName && art.sourceName.toLowerCase().includes(q))
       );
       renderNews(filtered);
     });
