@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 2. Carga y Filtro de Noticias RSS
-  const RSS_URL = 'https://www.xataka.com/index.xml';
+  const RSS_URL = 'https://www.google.com/index.xml';
   const newsContainer = document.getElementById('news-container');
   const newsSearch = document.getElementById('news-search');
   
