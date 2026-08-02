@@ -1,9 +1,10 @@
 const CONFIG = {
   // Agrega o elimina fuentes aquí fácilmente
   rssFeeds: [
-    { name: "Anime News", url: "https://www.animenewsnetwork.com/all/rss.xml?ann-edition=w" },
-    { name: "Google Ciencia y Tec", url: "https://news.google.com/rss/headlines/section/topic/SCITECH?hl=es-419&gl=CL&ceid=CL:es-419" },
-    { name: "FayerWayer", url: "https://www.fayerwayer.com/arc/outboundfeeds/rss/" },
-    { name: "Xataka", url: "https://www.xataka.com/feedburner.xml" }
+    { name: "Microsiervos", url: "https://www.microsiervos.com/index.xml" },
+    { name: "Genbeta", url: "https://www.genbeta.com/feedburner.xml" },
+    { name: "Espinof", url: "https://www.espinof.com/feedburner.xml" },
+    { name: "VidaExtra", url: "https://www.vidaextra.com/feedburner.xml" },
+    { name: "Xataka", url: "https://www.xataka.com/feedburner.xml" },
   ]
 };
