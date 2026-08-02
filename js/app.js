@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 2. Carga y Filtro de Noticias RSS
-  const RSS_URL = 'https://www.google.com/index.xml';
+  const RSS_URL = 'https://www.animenewsnetwork.com/all/rss.xml?ann-edition=w';
   const newsContainer = document.getElementById('news-container');
   const newsSearch = document.getElementById('news-search');
   
