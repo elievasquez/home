@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Studio25 Radio</title>
+<link rel="manifest" href="./manifest.json">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+ margin:0;padding:8px;min-height:100vh;
+ display:flex;justify-content:center;align-items:center;
+ font-family:Arial,sans-serif;color:white;
+ background:
+ radial-gradient(circle at 15% 20%,#18295c 0,transparent 35%),
+ radial-gradient(circle at 85% 80%,#40144d 0,transparent 35%),#030711
+}
+
+.player{
+ width:min(620px,100%);padding:18px 20px;
+ border-radius:24px;background:rgba(4,9,20,.96);
+ border:1px solid #27334d;
+ box-shadow:0 0 35px rgba(0,110,255,.15)
+}
+
+.top{display:flex;justify-content:space-between;align-items:center}
+.live-title{font-size:25px;font-weight:800;color:#ff3030}
+.station{font-size:20px;font-weight:bold;margin-top:2px}
+
+.status{
+ padding:8px 12px;border:1px solid #27334d;
+ border-radius:20px;color:#b8bec9;font-size:14px
+}
+.status-dot{
+ display:inline-block;width:9px;height:9px;margin-right:6px;
+ border-radius:50%;background:#777
+}
+.status.online .status-dot{
+ background:#20e879;box-shadow:0 0 9px #20e879
+}
+
+.description{text-align:center;font-size:18px;color:#e0e2e8;margin:7px 0}
+
+.logo-area{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:10px;
+ width:100%;
+ margin:0 auto 6px;
+}
+
+.flag{
+ font-size:34px;
+ line-height:1;
+ flex:0 0 auto;
+ filter:drop-shadow(0 0 6px rgba(255,255,255,.18));
+}
+
+.logo{
+ width:100%;max-width:390px;max-height:300px;
+ object-fit:contain;display:block;
+}
+
+.now-playing-title{
+ text-align:center;color:#2196ff;font-size:24px;
+ font-weight:800;margin:4px 0 7px
+}
+
+.song{
+ text-align:center;font-size:25px;line-height:1.15;
+ min-height:29px
+}
+
+.artist{
+ text-align:center;font-size:18px;color:#42a5ff;
+ margin-top:4px;min-height:21px
+}
+
+.equalizer{
+ height:48px;margin:6px auto;
+ display:flex;justify-content:center;align-items:flex-end;gap:4px
+}
+
+.bar{
+ width:6px;height:8px;border-radius:5px;
+ background:linear-gradient(to top,#168cff,#8d4cff,#ff43d1);
+ box-shadow:0 0 7px rgba(40,150,255,.6);
+ animation:eq .8s ease-in-out infinite alternate;
+ animation-play-state:paused
+}
+
+.equalizer.playing .bar{animation-play-state:running}
+
+.bar:nth-child(2n){animation-delay:.15s}
+.bar:nth-child(3n){animation-delay:.3s}
+.bar:nth-child(4n){animation-delay:.4s}
+
+@keyframes eq{
+ 0%{height:8px}
+ 50%{height:40px}
+ 100%{height:28px}
+}
+
+.play-button{
+ width:96px;height:96px;display:flex;
+ justify-content:center;align-items:center;
+ margin:4px auto 9px;border-radius:50%;
+ border:2px solid #2196ff;background:#07101e;
+ color:white;font-size:40px;cursor:pointer;
+ box-shadow:0 0 18px rgba(33,150,255,.38)
+}
+
+.playing-button{animation:pulse 1.8s infinite}
+
+@keyframes pulse{
+ 50%{box-shadow:0 0 32px rgba(37,99,235,.75)}
+}
+
+.volume{
+ display:flex;align-items:center;gap:9px;
+ margin:2px 20px 10px
+}
+
+.volume input{flex:1;accent-color:#2196ff}
+
+.share-button,.install-button{
+ width:100%;padding:11px;border-radius:24px;
+ border:1px solid #2196ff;color:white;
+ font-size:17px;font-weight:bold;cursor:pointer
+}
+
+.share-button{
+ background:linear-gradient(90deg,rgba(20,65,150,.45),rgba(100,20,100,.45));
+ margin-bottom:8px
+}
+
+.install-button{
+ display:none;
+ background:linear-gradient(90deg,#102b63,#3b155c);
+ margin-bottom:8px
+}
+
+.footer-info{
+ border-top:1px solid #27334d;padding-top:8px;
+ text-align:center;color:#cbd0dc;font-size:17px
+}
+
+.footer-sub{color:#aeb5c4;font-size:15px}
+
+.thanks{
+ margin-top:4px;padding:5px;border:1px solid #27334d;
+ border-radius:18px;text-align:center;font-size:14px
+}
+
+.thanks strong{color:#2196ff}
+
+audio{display:none}
+
+@media(max-width:450px){
+ body{padding:5px}
+ .player{padding:4px 10px;border-radius:18px}
+
+ .logo-area{
+  gap:6px;
+ }
+
+ .flag{
+  font-size:25px;
+ }
+
+ .logo{max-width:280px;max-height:195px}
+
+ .now-playing-title{font-size:18px;margin:2px 0 3px}
+ .song{font-size:19px}
+ .equalizer{height:24px;margin:20px auto 8px}
+ .play-button{width:72px;height:72px;font-size:30px;margin:2px auto 5px}
+ .volume{margin:1px 10px 5px}
+ .share-button,.install-button{padding:8px}
+ .footer-info{padding-top:5px;font-size:14px}
+ .footer-sub{font-size:12px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="player">
+
+<div class="top">
+ <div>
+  <div class="live-title" id="liveTitle">● RADIO APAGADA</div>
+  <div class="station">Studio25</div>
+ </div>
+
+ <div class="status" id="status">
+  <span class="status-dot"></span> Fuera de línea
+ </div>
+</div>
+
+<div class="description">
+ Llevando música y entretención para ti
+</div>
+
+<div class="logo-area">
+ <span class="flag">🇨🇱</span>
+
+ <img class="logo"
+  src="logo-demo.svg"
+  alt="Demo Radio Online">
+
+ <span class="flag">🇨🇱</span>
+</div>
+
+<div class="now-playing-title">♪ SONANDO AHORA</div>
+
+<div class="song" id="song">
+ Esperando transmisión...
+</div>
+
+<div class="artist" id="artist">Studio25</div>
+
+<div class="equalizer" id="equalizer">
+ <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+ <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+ <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+ <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+ <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+ <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+ <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+</div>
+
+<button class="play-button" id="playButton">▶</button>
+
+<div class="volume">
+ <span>🔊</span>
+ <input id="volume" type="range" min="0" max="1" step=".01" value=".85">
+</div>
+
+<button class="share-button" id="shareButton">
+ 📤 Compartir radio
+</button>
+
+<button class="install-button" id="installButton">
+ 📲 Instala nuestra app · Studio25
+</button>
+
+<div class="footer-info">
+ <strong>🌎 Longaví</strong>
+ <div class="footer-sub">Para el mundo</div>
+</div>
+
+<div class="thanks">
+ ❤️ Gracias por preferir <strong>Studio25</strong>
+</div>
+
+<audio id="radio" preload="none">
+ <source
+ src="https://app.aloncast.com/api/stream/demo-cd738e"
+ type="audio/mpeg">
+ <source
+ src="https://demo-cd738e.stream.aloncast.com/demo-cd738e.mp3"
+ type="audio/mpeg">
+</audio>
+
+</div>
+
+<script>
+
+const radio=document.getElementById("radio");
+const play=document.getElementById("playButton");
+const eq=document.getElementById("equalizer");
+const vol=document.getElementById("volume");
+const song=document.getElementById("song");
+const artist=document.getElementById("artist");
+const live=document.getElementById("liveTitle");
+const status=document.getElementById("status");
+const share=document.getElementById("shareButton");
+const install=document.getElementById("installButton");
+
+radio.volume=.85;
+
+vol.oninput=()=>radio.volume=vol.value;
+
+function offline(){
+ live.textContent="● RADIO APAGADA";
+ live.className="live-title";
+ status.innerHTML='<span class="status-dot"></span> Fuera de línea';
+ status.className="status";
+ eq.classList.remove("playing");
+ play.textContent="▶";
+ play.classList.remove("playing-button");
+}
+
+play.onclick=async()=>{
+ if(radio.paused){
+  try{
+   await radio.play();
+  }catch(e){offline()}
+ }else{
+  radio.pause();
+ }
+};
+
+radio.onplaying=()=>{
+ live.textContent="● EN VIVO";
+ live.className="live-title";
+ status.innerHTML='<span class="status-dot"></span> Señal en línea';
+ status.className="status online";
+ eq.classList.add("playing");
+ play.textContent="❚❚";
+ play.classList.add("playing-button");
+ updateSong();
+};
+
+radio.onpause=offline;
+radio.onerror=offline;
+
+share.onclick=async()=>{
+ const data={
+  title:"Studio25 Radio",
+  text:"🎵 Escucha Studio25 Radio — música y entretención para ti.",
+  url:location.href
+ };
+
+ if(navigator.share){
+  try{await navigator.share(data)}catch(e){}
+ }else{
+  await navigator.clipboard.writeText(location.href);
+  share.textContent="✅ Enlace copiado";
+  setTimeout(()=>share.textContent="📤 Compartir radio",2000);
+ }
+};
+
+/* INSTALACIÓN */
+
+let installPrompt=null;
+
+window.addEventListener("beforeinstallprompt",e=>{
+ e.preventDefault();
+ installPrompt=e;
+ install.style.display="block";
+});
+
+install.onclick=async()=>{
+ if(!installPrompt)return;
+
+ installPrompt.prompt();
+
+ const result=await installPrompt.userChoice;
+
+ if(result.outcome==="accepted"){
+  install.style.display="none";
+ }
+
+ installPrompt=null;
+};
+
+window.addEventListener("appinstalled",()=>{
+ install.style.display="none";
+});
+
+/* CANCIÓN */
+
+const metadataURL=
+"https://api.twj.es/?url="+encodeURIComponent(
+"https://app.aloncast.com/api/stream/demo-cd738e"
+);
+
+function valido(t){
+ if(!t)return false;
+ t=t.trim().toLowerCase();
+ return !["carregando...","carregando","cargando...","cargando","loading...","loading"].includes(t);
+}
+
+async function updateSong(){
+
+ if(radio.paused)return;
+
+ try{
+  const r=await fetch(metadataURL+"&t="+Date.now(),{
+   cache:"no-store"
+  });
+
+  if(!r.ok)return;
+
+  const d=await r.json();
+
+  const title=d.songtitle||d.song||d.title||"";
+  const art=d.artist||"";
+
+  if(valido(title))song.textContent=title;
+  if(valido(art))artist.textContent=art;
+
+ }catch(e){}
+}
+
+setInterval(updateSong,10000);
+
+offline();
+
+</script>
+
+<script>
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("./sw.js");
+}
+</script>
+
+</body>
+</html>
