@@ -4,60 +4,63 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Radio en vivo</title>
+<meta name="theme-color" content="#0f0f17">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   /* ====== CONFIGURA AQUÍ TUS COLORES ====== */
   :root{
-    --acento:#ff3d6e;      /* color principal (botón, barras) */
+    --acento:#ff3d6e;      /* color principal */
     --acento2:#ffb347;     /* color secundario (degradado) */
     --fondo:#0f0f17;
     --tarjeta:rgba(255,255,255,.06);
     --texto:#ffffff;
-    --texto-suave:rgba(255,255,255,.65);
+    --texto-suave:rgba(255,255,255,.62);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
-    font-family:'Inter',system-ui,sans-serif;background:var(--fondo);color:var(--texto);
-    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;
-  }
-  .bg{
-    position:fixed;inset:-40px;background-size:cover;background-position:center;
-    filter:blur(40px) brightness(.45);transform:scale(1.1);transition:background-image .8s;z-index:0;
+    font-family:'Inter',system-ui,sans-serif;color:var(--texto);min-height:100vh;
+    display:flex;align-items:center;justify-content:center;padding:16px;
+    background:
+      radial-gradient(circle at 20% 15%, color-mix(in srgb, var(--acento) 35%, transparent), transparent 45%),
+      radial-gradient(circle at 85% 85%, color-mix(in srgb, var(--acento2) 28%, transparent), transparent 45%),
+      var(--fondo);
   }
   .player{
-    position:relative;z-index:1;width:100%;max-width:380px;background:var(--tarjeta);
+    width:100%;max-width:380px;background:var(--tarjeta);
     backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
     border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:24px;
     box-shadow:0 20px 60px rgba(0,0,0,.5);
   }
-  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-  .estacion{font-weight:800;font-size:15px;letter-spacing:.3px}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+  .estacion{font-weight:800;font-size:15px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:10px}
   .live{
-    display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
+    flex-shrink:0;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
     background:rgba(255,255,255,.1);padding:5px 10px;border-radius:20px;text-transform:uppercase;
   }
   .live i{width:8px;height:8px;border-radius:50%;background:#888}
   .live.on i{background:#ff2b4a;animation:pulso 1.4s infinite}
   @keyframes pulso{0%{box-shadow:0 0 0 0 rgba(255,43,74,.7)}70%{box-shadow:0 0 0 8px rgba(255,43,74,0)}100%{box-shadow:0 0 0 0 rgba(255,43,74,0)}}
-  .portada{
-    width:100%;aspect-ratio:1;border-radius:18px;overflow:hidden;position:relative;
-    background:linear-gradient(135deg,var(--acento),var(--acento2));margin-bottom:20px;
-    box-shadow:0 12px 30px rgba(0,0,0,.4);
-  }
-  .portada img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .5s}
-  .portada .icono{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:80px;opacity:.9}
-  .eq{position:absolute;bottom:14px;right:14px;display:flex;gap:3px;align-items:flex-end;height:22px;opacity:0;transition:opacity .3s}
-  .eq.on{opacity:1}
-  .eq span{width:4px;background:#fff;border-radius:2px;animation:eq 1s infinite ease-in-out}
-  .eq span:nth-child(2){animation-delay:.2s}.eq span:nth-child(3){animation-delay:.4s}.eq span:nth-child(4){animation-delay:.6s}
-  @keyframes eq{0%,100%{height:4px}50%{height:22px}}
-  .info{text-align:center;margin-bottom:20px;min-height:52px}
-  .titulo{font-size:20px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .artista{font-size:15px;color:var(--texto-suave);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .controles{display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+
+  /* Ecualizador grande */
+  .eq{display:flex;gap:6px;align-items:flex-end;justify-content:center;height:56px;margin-bottom:26px}
+  .eq span{width:8px;height:8px;border-radius:4px;background:linear-gradient(to top,var(--acento),var(--acento2));transition:height .3s}
+  .eq.on span{animation:eq 1.1s infinite ease-in-out}
+  .eq.on span:nth-child(2){animation-delay:.15s}.eq.on span:nth-child(3){animation-delay:.3s}
+  .eq.on span:nth-child(4){animation-delay:.45s}.eq.on span:nth-child(5){animation-delay:.6s}
+  .eq.on span:nth-child(6){animation-delay:.75s}.eq.on span:nth-child(7){animation-delay:.9s}
+  @keyframes eq{0%,100%{height:8px}50%{height:56px}}
+
+  .info{text-align:center;margin-bottom:26px;min-height:70px}
+  .etiqueta{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--acento);margin-bottom:8px}
+  .titulo{font-size:22px;font-weight:800;line-height:1.25;word-wrap:break-word}
+  .artista{font-size:16px;color:var(--texto-suave);margin-top:6px;word-wrap:break-word}
+  .cambio{animation:aparece .6s ease}
+  @keyframes aparece{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .controles{display:flex;justify-content:center;margin-bottom:22px}
   .play{
     width:72px;height:72px;border-radius:50%;border:none;cursor:pointer;
-    background:linear-gradient(135deg,var(--acento),var(--acento2));color:#fff;
+    background:linear-gradient(135deg,var(--acento),var(--acento2));
     display:flex;align-items:center;justify-content:center;
     box-shadow:0 8px 24px rgba(255,61,110,.45);transition:transform .15s;
   }
@@ -65,6 +68,7 @@
   .play svg{width:30px;height:30px;fill:#fff}
   .spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:gira .8s linear infinite}
   @keyframes gira{to{transform:rotate(360deg)}}
+
   .volumen{display:flex;align-items:center;gap:10px}
   .mute{background:none;border:none;cursor:pointer;padding:4px;display:flex}
   .mute svg{width:22px;height:22px;fill:var(--texto-suave)}
@@ -74,32 +78,38 @@
   }
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
   input[type=range]::-moz-range-thumb{width:15px;height:15px;border:none;border-radius:50%;background:#fff}
+
+  .historial{margin-top:22px;border-top:1px solid rgba(255,255,255,.1);padding-top:16px}
+  .historial h4{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--texto-suave);margin-bottom:10px}
+  .historial ol{list-style:none}
+  .historial li{display:flex;gap:10px;align-items:baseline;padding:7px 0;font-size:14px;border-bottom:1px solid rgba(255,255,255,.05)}
+  .historial li:last-child{border-bottom:none}
+  .historial .hora{font-size:12px;color:var(--texto-suave);flex-shrink:0;width:42px}
+  .historial .txt{overflow:hidden}
+  .historial .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .historial .a{color:var(--texto-suave);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
   .pie{display:flex;justify-content:space-between;margin-top:16px;font-size:12px;color:var(--texto-suave)}
 </style>
 </head>
 <body>
-<div class="bg" id="bg"></div>
-
 <div class="player">
   <div class="top">
     <div class="estacion" id="estacion">Radio en vivo</div>
     <div class="live" id="live"><i></i>En vivo</div>
   </div>
 
-  <div class="portada">
-    <div class="icono" id="icono">🎵</div>
-    <img id="cover" alt="" style="opacity:0">
-    <div class="eq" id="eq"><span></span><span></span><span></span><span></span></div>
-  </div>
+  <div class="eq" id="eq"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
 
-  <div class="info">
-    <div class="titulo" id="titulo">Pulsa play para escuchar</div>
+  <div class="info" id="info">
+    <div class="etiqueta">Sonando ahora</div>
+    <div class="titulo" id="titulo">Cargando…</div>
     <div class="artista" id="artista">&nbsp;</div>
   </div>
 
   <div class="controles">
     <button class="play" id="play" aria-label="Reproducir">
-      <svg id="ico" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
     </button>
   </div>
 
@@ -108,6 +118,11 @@
       <svg viewBox="0 0 24 24" id="icoVol"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
     </button>
     <input type="range" id="vol" min="0" max="100" value="80" aria-label="Volumen">
+  </div>
+
+  <div class="historial" id="historial" hidden>
+    <h4>Sonaron antes</h4>
+    <ol id="lista"></ol>
   </div>
 
   <div class="pie">
@@ -120,20 +135,27 @@
 
 <script>
 /* ====== CONFIGURACIÓN ====== */
-const STREAM  = "https://pstnet4.shoutcastnet.com:40174/stream";
-const SERVER  = "https://pstnet4.shoutcastnet.com:40174";
-const NOMBRE  = "";        // Nombre de tu emisora. Vacío = usa el del servidor
-const REFRESCO = 5000;     // cada cuánto se actualiza la canción (ms)
-const LOGO    = "https://pstnet4.shoutcastnet.com/audio/images/shoutcast-net-high.jpg"; // portada por defecto
-// Mismo servicio de "canción actual" que usa el reproductor original de shoutcastnet
-const META_PROVEEDOR = "https://pstnet4.shoutcastnet.com/audio/players/player.php?url=" +
-                       encodeURIComponent(STREAM) + "&streamtype=icecast&historic=false&next=false";
-// Opcional: si subes el archivo meta-proxy.php a tu hosting, pon aquí su URL (ej. "https://tusitio.com/meta-proxy.php")
-const META_PROPIO = "";
+const STREAM   = "https://pstnet4.shoutcastnet.com:40174/stream";
+const SERVER   = "https://pstnet4.shoutcastnet.com:40174";
+const NOMBRE   = "";      // Nombre de tu emisora. Vacío = usa el del servidor
+const REFRESCO = 8000;    // cada cuánto se actualiza la canción (ms)
+const HISTORIAL = 5;      // cuántas canciones anteriores mostrar (0 = ocultar)
+const META_PROPIO = "";   // Opcional: URL de tu meta-proxy.php (ver README)
+
+/* Fuentes para saber qué canción suena (se prueban en orden y se recuerda la que funciona) */
+const PROVEEDOR = "https://pstnet4.shoutcastnet.com/audio/players/player.php?url=" +
+                  encodeURIComponent(STREAM) + "&streamtype=icecast&historic=false&next=false";
+const STATS = SERVER + "/stats?sid=1&json=1";
+const PROXIES = [
+  u => "https://corsproxy.io/?url=" + encodeURIComponent(u),
+  u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+  u => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u)
+];
 
 const $ = id => document.getElementById(id);
 const audio = $("audio");
 let sonando = false, cancionActual = "", reintentos = 0;
+const historial = [];
 
 const ICO_PLAY  = '<path d="M8 5v14l11-7z"/>';
 const ICO_PAUSE = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
@@ -148,13 +170,13 @@ function setUI(modo){
   if (modo === "cargando"){
     btn.innerHTML = '<div class="spinner"></div>'; $("estado").textContent = "Conectando…";
   } else {
-    btn.innerHTML = '<svg id="ico" viewBox="0 0 24 24">' + (modo === "play" ? ICO_PAUSE : ICO_PLAY) + '</svg>';
+    btn.innerHTML = '<svg viewBox="0 0 24 24">' + (modo === "play" ? ICO_PAUSE : ICO_PLAY) + '</svg>';
+    btn.setAttribute("aria-label", modo === "play" ? "Pausar" : "Reproducir");
     $("estado").textContent = modo === "play" ? "Reproduciendo" : "Detenido";
   }
   $("live").classList.toggle("on", modo === "play");
   $("eq").classList.toggle("on", modo === "play");
 }
-
 function reproducir(){
   sonando = true; setUI("cargando");
   audio.src = STREAM + "?t=" + Date.now();   // siempre conecta en directo
@@ -166,7 +188,7 @@ function detener(){
 $("play").onclick = () => sonando ? detener() : reproducir();
 audio.addEventListener("playing", () => { reintentos = 0; setUI("play"); });
 audio.addEventListener("waiting", () => sonando && setUI("cargando"));
-audio.addEventListener("error",   () => {
+audio.addEventListener("error", () => {
   if (!sonando) return;
   if (reintentos++ < 5){ $("estado").textContent = "Reconectando…"; setTimeout(reproducir, 3000); }
   else { sonando = false; setUI("stop"); $("estado").textContent = "Sin conexión"; }
@@ -187,145 +209,116 @@ $("mute").onclick = () => {
   $("icoVol").innerHTML = audio.muted ? ICO_MUTE : ICO_VOL;
 };
 
-/* ---------- JSONP (evita bloqueos CORS) ---------- */
-function jsonp(url, timeout = 8000){
+/* ---------- Utilidades de red ---------- */
+function jsonp(url, timeout = 6000){
   return new Promise((ok, fail) => {
     const cb = "cb" + Math.random().toString(36).slice(2);
     const s = document.createElement("script");
-    const t = setTimeout(() => { limpiar(); fail("timeout"); }, timeout);
-    function limpiar(){ clearTimeout(t); delete window[cb]; s.remove(); }
-    window[cb] = d => { limpiar(); ok(d); };
-    s.onerror = () => { limpiar(); fail("error"); };
+    const t = setTimeout(() => { fin(); fail("timeout"); }, timeout);
+    function fin(){ clearTimeout(t); delete window[cb]; s.remove(); }
+    window[cb] = d => { fin(); ok(d); };
+    s.onerror = () => { fin(); fail("error"); };
     s.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
     document.body.appendChild(s);
   });
 }
+async function leerJSON(url, timeout = 7000){
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const r = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+    if (!r.ok) throw r.status;
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+const sinCache = u => u + (u.includes("?") ? "&" : "?") + "t=" + Date.now();
+const decodificar = s => (s || "").replace(/&apos;|&#39;/g, "'").replace(/&quot;/g, '"')
+                                  .replace(/&amp;/g, "&").replace(/\s{2,}/g, " ").trim();
 
-/* ---------- Canción actual ---------- */
-const decodificar = s => (s || "").replace(/&apos;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/\s{2,}/g, " ").trim();
-
-async function leerJSON(url){
-  const r = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
-  if (!r.ok) throw r.status;
-  return r.json();
+/* Cada fuente devuelve {artista, titulo, oyentes?, estacion?} o lanza error */
+function deProveedor(d){
+  if (!d || !d.currentSong) throw "vacío";
+  return { artista: decodificar(d.currentArtist), titulo: decodificar(d.currentSong) };
+}
+function deStats(d){
+  if (!d || !d.songtitle) throw "vacío";
+  return { texto: decodificar(d.songtitle), oyentes: d.currentlisteners, estacion: d.servertitle };
+}
+const FUENTES = [];
+if (META_PROPIO) FUENTES.push(async () => {
+  const d = await leerJSON(sinCache(META_PROPIO));
+  if (!d.cancion) throw "vacío";
+  return { texto: decodificar(d.cancion), oyentes: d.oyentes };
+});
+FUENTES.push(async () => deProveedor(await leerJSON(sinCache(PROVEEDOR))));
+FUENTES.push(async () => deStats(await jsonp(STATS)));
+for (const p of PROXIES){
+  FUENTES.push(async () => deStats(await leerJSON(p(sinCache(STATS)))));
+  FUENTES.push(async () => deProveedor(await leerJSON(p(sinCache(PROVEEDOR)))));
 }
 
-/* Prueba varias fuentes hasta obtener la canción */
+let fuenteBuena = 0;   // índice de la última fuente que funcionó
 async function obtenerCancion(){
-  // 1) Servicio del proveedor (igual que el reproductor original)
-  try {
-    const d = await leerJSON(META_PROVEEDOR);
-    if (d.currentSong) return decodificar(d.currentArtist) + " - " + decodificar(d.currentSong);
-  } catch(e){}
-  // 2) Tu propio proxy (meta-proxy.php), si lo configuraste
-  if (META_PROPIO){
-    try {
-      const d = await leerJSON(META_PROPIO);
-      if (d.oyentes !== undefined) $("oyentes").textContent = "👥 " + d.oyentes + " oyentes";
-      if (d.cancion) return decodificar(d.cancion);
-    } catch(e){}
+  for (let n = 0; n < FUENTES.length; n++){
+    const i = (fuenteBuena + n) % FUENTES.length;
+    try { const r = await FUENTES[i](); fuenteBuena = i; return r; } catch(e){}
   }
-  // 3) Estadísticas de Shoutcast directas
-  try {
-    const d = await jsonp(SERVER + "/stats?sid=1&json=1", 5000);
-    if (d.currentlisteners !== undefined) $("oyentes").textContent = "👥 " + d.currentlisteners + " oyentes";
-    if (d.songtitle) return decodificar(d.songtitle);
-  } catch(e){}
-  // 4) Texto plano de Shoutcast
-  try {
-    const r = await fetch(SERVER + "/currentsong?sid=1", { cache: "no-store" });
-    if (r.ok) return decodificar(await r.text());
-  } catch(e){}
-  return "";
+  return null;
+}
+
+/* ---------- Mostrar canción ---------- */
+function separar(r){
+  if (r.titulo !== undefined) return { artista: r.artista || "", titulo: r.titulo };
+  const i = r.texto.indexOf(" - ");
+  return i > 0 ? { artista: r.texto.slice(0, i).trim(), titulo: r.texto.slice(i + 3).trim() }
+               : { artista: "", titulo: r.texto };
 }
 
 async function actualizar(){
-  const texto = await obtenerCancion();
-  if (texto) mostrarCancion(texto);
-  else if (!cancionActual) $("titulo").textContent = "Transmisión en vivo";
-}
+  const r = await obtenerCancion();
+  if (!r){ if (!cancionActual) $("titulo").textContent = "Transmisión en vivo"; return; }
+  if (!NOMBRE && r.estacion) $("estacion").textContent = decodificar(r.estacion);
+  if (r.oyentes !== undefined && r.oyentes !== null) $("oyentes").textContent = "👥 " + r.oyentes + " oyentes";
 
-function mostrarCancion(texto){
-  texto = texto.trim();
-  if (!texto || texto === cancionActual) return;
-  cancionActual = texto;
-  let artista = "", titulo = texto;
-  const i = texto.indexOf(" - ");
-  if (i > 0){ artista = texto.slice(0, i); titulo = texto.slice(i + 3); }
+  const { artista, titulo } = separar(r);
+  const clave = artista + "|" + titulo;
+  if (!titulo || clave === cancionActual) return;
+
+  // Pasa la canción anterior al historial
+  if (cancionActual && HISTORIAL > 0){
+    const [a, t] = cancionActual.split("|");
+    historial.unshift({ artista: a, titulo: t, hora: new Date() });
+    historial.length = Math.min(historial.length, HISTORIAL);
+    pintarHistorial();
+  }
+  cancionActual = clave;
+
+  const info = $("info");
+  info.classList.remove("cambio"); void info.offsetWidth; info.classList.add("cambio");
   $("titulo").textContent = titulo;
-  $("artista").textContent = artista || "\u00a0";
-  document.title = titulo + (artista ? " · " + artista : "");
-  buscarPortada(artista, titulo);
+  $("artista").textContent = artista || " ";
+  document.title = titulo + (artista ? " – " + artista : "") + " | " + $("estacion").textContent;
+
   if ("mediaSession" in navigator){
-    navigator.mediaSession.metadata = new MediaMetadata({ title: titulo, artist: artista, album: $("estacion").textContent });
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: titulo, artist: artista, album: $("estacion").textContent
+    });
   }
 }
 
-/* Limpia el texto: quita (remix), [live], feat., +, símbolos, etc. */
-function limpiar(t){
-  return (t || "")
-    .replace(/\(.*?\)|\[.*?\]/g, " ")
-    .replace(/\b(feat\.?|ft\.?|featuring|remix|version|versión|live|en vivo|official|video|audio)\b.*$/i, " ")
-    .replace(/[+&|/_*#~"“”]/g, " ")
-    .replace(/\s+/g, " ").trim();
-}
-
-/* Busca en iTunes (igual que el reproductor original: petición directa, con JSONP de respaldo) */
-async function portadaItunes(q){
-  const url = "https://itunes.apple.com/search?term=" + encodeURIComponent(q) + "&media=music&limit=1";
-  let r;
-  try { r = await (await fetch(url)).json(); } catch(e){ r = await jsonp(url); }
-  const x = r.results && r.results[0];
-  return x && x.artworkUrl100 ? x.artworkUrl100.replace("100x100bb", "600x600bb") : null;
-}
-/* Busca en Deezer (respaldo) */
-async function portadaDeezer(q, soloArtista){
-  if (soloArtista){
-    const r = await jsonp("https://api.deezer.com/search/artist?q=" + encodeURIComponent(q) + "&limit=1&output=jsonp");
-    return r.data && r.data[0] ? r.data[0].picture_xl : null;
+function pintarHistorial(){
+  const lista = $("lista");
+  lista.innerHTML = "";
+  for (const h of historial){
+    const li = document.createElement("li");
+    const hora = h.hora.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    li.innerHTML = '<span class="hora"></span><div class="txt"><div class="t"></div><div class="a"></div></div>';
+    li.querySelector(".hora").textContent = hora;
+    li.querySelector(".t").textContent = h.titulo;
+    li.querySelector(".a").textContent = h.artista;
+    lista.appendChild(li);
   }
-  const r = await jsonp("https://api.deezer.com/search?q=" + encodeURIComponent(q) + "&limit=1&output=jsonp");
-  return r.data && r.data[0] && r.data[0].album ? r.data[0].album.cover_xl : null;
-}
-
-async function buscarPortada(artista, titulo){
-  const a = limpiar(artista), t = limpiar(titulo);
-  const primeraPalabra = t.split(" ")[0] || "";
-  // Del intento más preciso al más general
-  const intentos = [
-    () => portadaItunes(artista.trim() + " " + titulo.trim()),   // búsqueda exacta, como el original
-    () => portadaItunes(a + " " + t),
-    () => portadaDeezer(a + " " + t),
-    () => portadaItunes(a + " " + primeraPalabra),
-    () => portadaDeezer(a + " " + primeraPalabra),
-    () => portadaItunes(t),
-    () => a ? portadaDeezer(a, true) : null   // al menos la foto del artista
-  ];
-  for (const intento of intentos){
-    if (texto_cambio(artista, titulo)) return;       // ya cambió de canción
-    try { const url = await intento(); if (url) return ponerPortada(url); } catch(e){}
-  }
-  ponerPortada(LOGO || null);
-}
-function texto_cambio(artista, titulo){
-  return cancionActual !== (artista ? artista + " - " + titulo : titulo);
-}
-
-function ponerPortada(url){
-  const cover = $("cover");
-  if (!url){
-    cover.style.opacity = 0; $("icono").style.opacity = .9; $("bg").style.backgroundImage = ""; return;
-  }
-  const img = new Image();
-  img.onload = () => {
-    cover.src = url; cover.style.opacity = 1; $("icono").style.opacity = 0;
-    $("bg").style.backgroundImage = "url('" + url + "')";
-    if ("mediaSession" in navigator && navigator.mediaSession.metadata){
-      navigator.mediaSession.metadata.artwork = [{ src: url, sizes: "600x600", type: "image/jpeg" }];
-    }
-  };
-  img.onerror = () => { if (url !== LOGO && LOGO) ponerPortada(LOGO); };
-  img.src = url;
+  $("historial").hidden = historial.length === 0;
 }
 
 if ("mediaSession" in navigator){
@@ -334,7 +327,6 @@ if ("mediaSession" in navigator){
   navigator.mediaSession.setActionHandler("stop",  detener);
 }
 
-if (LOGO) ponerPortada(LOGO);
 actualizar();
 setInterval(actualizar, REFRESCO);
 </script>
