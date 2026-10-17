@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radio en vivo 2.1</title>
+<meta name="theme-color" content="#0f0f17">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  /* ====== CONFIGURA AQUÍ TUS COLORES ====== */
+  :root{
+    --acento:#ff3d6e;      /* color principal */
+    --acento2:#ffb347;     /* color secundario (degradado) */
+    --fondo:#0f0f17;
+    --tarjeta:rgba(255,255,255,.06);
+    --texto:#ffffff;
+    --texto-suave:rgba(255,255,255,.62);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,sans-serif;color:var(--texto);min-height:100vh;
+    display:flex;align-items:center;justify-content:center;padding:16px;
+    background:
+      radial-gradient(circle at 20% 15%, color-mix(in srgb, var(--acento) 35%, transparent), transparent 45%),
+      radial-gradient(circle at 85% 85%, color-mix(in srgb, var(--acento2) 28%, transparent), transparent 45%),
+      var(--fondo);
+  }
+  .player{
+    width:100%;max-width:380px;background:var(--tarjeta);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:24px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+  .estacion{font-weight:800;font-size:15px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:10px}
+  .live{
+    flex-shrink:0;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
+    background:rgba(255,255,255,.1);padding:5px 10px;border-radius:20px;text-transform:uppercase;
+  }
+  .live i{width:8px;height:8px;border-radius:50%;background:#888}
+  .live.on i{background:#ff2b4a;animation:pulso 1.4s infinite}
+  @keyframes pulso{0%{box-shadow:0 0 0 0 rgba(255,43,74,.7)}70%{box-shadow:0 0 0 8px rgba(255,43,74,0)}100%{box-shadow:0 0 0 0 rgba(255,43,74,0)}}
+
+  /* Ecualizador grande */
+  .eq{display:flex;gap:6px;align-items:flex-end;justify-content:center;height:56px;margin-bottom:26px}
+  .eq span{width:8px;height:8px;border-radius:4px;background:linear-gradient(to top,var(--acento),var(--acento2));transition:height .3s}
+  .eq.on span{animation:eq 1.1s infinite ease-in-out}
+  .eq.on span:nth-child(2){animation-delay:.15s}.eq.on span:nth-child(3){animation-delay:.3s}
+  .eq.on span:nth-child(4){animation-delay:.45s}.eq.on span:nth-child(5){animation-delay:.6s}
+  .eq.on span:nth-child(6){animation-delay:.75s}.eq.on span:nth-child(7){animation-delay:.9s}
+  @keyframes eq{0%,100%{height:8px}50%{height:56px}}
+
+  .info{text-align:center;margin-bottom:26px;min-height:70px}
+  .etiqueta{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--acento);margin-bottom:8px}
+  .titulo{font-size:22px;font-weight:800;line-height:1.25;word-wrap:break-word}
+  .artista{font-size:16px;color:var(--texto-suave);margin-top:6px;word-wrap:break-word}
+  .cambio{animation:aparece .6s ease}
+  @keyframes aparece{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .controles{display:flex;justify-content:center;margin-bottom:22px}
+  .play{
+    width:72px;height:72px;border-radius:50%;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--acento),var(--acento2));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 24px rgba(255,61,110,.45);transition:transform .15s;
+  }
+  .play:hover{transform:scale(1.06)}.play:active{transform:scale(.95)}
+  .play svg{width:30px;height:30px;fill:#fff}
+  .spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:gira .8s linear infinite}
+  @keyframes gira{to{transform:rotate(360deg)}}
+
+  .volumen{display:flex;align-items:center;gap:10px}
+  .mute{background:none;border:none;cursor:pointer;padding:4px;display:flex}
+  .mute svg{width:22px;height:22px;fill:var(--texto-suave)}
+  input[type=range]{
+    flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:5px;outline:none;cursor:pointer;
+    background:linear-gradient(to right,var(--acento) var(--v,80%),rgba(255,255,255,.2) var(--v,80%));
+  }
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  input[type=range]::-moz-range-thumb{width:15px;height:15px;border:none;border-radius:50%;background:#fff}
+
+  .historial{margin-top:22px;border-top:1px solid rgba(255,255,255,.1);padding-top:16px}
+  .historial h4{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--texto-suave);margin-bottom:10px}
+  .historial ol{list-style:none}
+  .historial li{display:flex;gap:10px;align-items:baseline;padding:7px 0;font-size:14px;border-bottom:1px solid rgba(255,255,255,.05)}
+  .historial li:last-child{border-bottom:none}
+  .historial .hora{font-size:12px;color:var(--texto-suave);flex-shrink:0;width:42px}
+  .historial .txt{overflow:hidden}
+  .historial .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .historial .a{color:var(--texto-suave);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .pie{display:flex;justify-content:space-between;margin-top:16px;font-size:12px;color:var(--texto-suave)}
+</style>
+</head>
+<body>
+<div class="player">
+  <div class="top">
+    <div class="estacion" id="estacion">Radio en vivo</div>
+    <div class="live" id="live"><i></i>En vivo</div>
+  </div>
+
+  <div class="eq" id="eq"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+  <div class="info" id="info">
+    <div class="etiqueta">Sonando ahora</div>
+    <div class="titulo" id="titulo">Cargando…</div>
+    <div class="artista" id="artista">&nbsp;</div>
+  </div>
+
+  <div class="controles">
+    <button class="play" id="play" aria-label="Reproducir">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+  </div>
+
+  <div class="volumen">
+    <button class="mute" id="mute" aria-label="Silenciar">
+      <svg viewBox="0 0 24 24" id="icoVol"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+    </button>
+    <input type="range" id="vol" min="0" max="100" value="80" aria-label="Volumen">
+  </div>
+
+  <div class="historial" id="historial" hidden>
+    <h4>Sonaron antes</h4>
+    <ol id="lista"></ol>
+  </div>
+
+  <div class="pie">
+    <span id="estado">Detenido</span>
+    <span id="oyentes"></span>
+  </div>
+</div>
+
+<audio id="audio" preload="none"></audio>
+
+<script>
+/* ====== CONFIGURACIÓN ====== */
+const STREAM   = "https://pstnet4.shoutcastnet.com:40174/stream";
+const SERVER   = "https://pstnet4.shoutcastnet.com:40174";
+const NOMBRE   = "";      // Nombre de tu emisora. Vacío = usa el del servidor
+const REFRESCO = 10000;    // cada cuánto se actualiza la canción (ms)
+const HISTORIAL = 5;      // cuántas canciones anteriores mostrar (0 = ocultar)
+const META_PROPIO = "";   // Opcional: URL de tu meta-proxy.php (ver README)
+
+/* Fuentes para saber qué canción suena (se prueban en orden y se recuerda la que funciona) */
+const PROVEEDOR = "https://pstnet4.shoutcastnet.com/audio/players/player.php?url=" +
+                  encodeURIComponent(STREAM) + "&streamtype=icecast&historic=false&next=false";
+const STATS = SERVER + "/stats?sid=1&json=1";
+const PROXIES = [
+  u => "https://corsproxy.io/?url=" + encodeURIComponent(u),
+  u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+  u => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u)
+];
+
+const $ = id => document.getElementById(id);
+const audio = $("audio");
+let sonando = false, cancionActual = "", reintentos = 0;
+const historial = [];
+
+const ICO_PLAY  = '<path d="M8 5v14l11-7z"/>';
+const ICO_PAUSE = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+const ICO_VOL   = $("icoVol").innerHTML;
+const ICO_MUTE  = '<path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/>';
+
+if (NOMBRE) $("estacion").textContent = NOMBRE;
+
+/* ---------- Reproducción ---------- */
+function setUI(modo){
+  const btn = $("play");
+  if (modo === "cargando"){
+    btn.innerHTML = '<div class="spinner"></div>'; $("estado").textContent = "Conectando…";
+  } else {
+    btn.innerHTML = '<svg viewBox="0 0 24 24">' + (modo === "play" ? ICO_PAUSE : ICO_PLAY) + '</svg>';
+    btn.setAttribute("aria-label", modo === "play" ? "Pausar" : "Reproducir");
+    $("estado").textContent = modo === "play" ? "Reproduciendo" : "Detenido";
+  }
+  $("live").classList.toggle("on", modo === "play");
+  $("eq").classList.toggle("on", modo === "play");
+}
+function reproducir(){
+  sonando = true; setUI("cargando");
+  audio.src = STREAM + "?t=" + Date.now();   // siempre conecta en directo
+  audio.play().catch(() => { sonando = false; setUI("stop"); });
+}
+function detener(){
+  sonando = false; audio.pause(); audio.removeAttribute("src"); audio.load(); setUI("stop");
+}
+$("play").onclick = () => sonando ? detener() : reproducir();
+audio.addEventListener("playing", () => { reintentos = 0; setUI("play"); });
+audio.addEventListener("waiting", () => sonando && setUI("cargando"));
+audio.addEventListener("error", () => {
+  if (!sonando) return;
+  if (reintentos++ < 5){ $("estado").textContent = "Reconectando…"; setTimeout(reproducir, 3000); }
+  else { sonando = false; setUI("stop"); $("estado").textContent = "Sin conexión"; }
+});
+
+/* ---------- Volumen ---------- */
+const vol = $("vol");
+function aplicarVol(){
+  audio.volume = vol.value / 100; audio.muted = false;
+  vol.style.setProperty("--v", vol.value + "%");
+  $("icoVol").innerHTML = vol.value == 0 ? ICO_MUTE : ICO_VOL;
+  try { localStorage.setItem("vol40170", vol.value); } catch(e){}
+}
+try { const g = localStorage.getItem("vol40170"); if (g !== null) vol.value = g; } catch(e){}
+vol.oninput = aplicarVol; aplicarVol();
+$("mute").onclick = () => {
+  audio.muted = !audio.muted;
+  $("icoVol").innerHTML = audio.muted ? ICO_MUTE : ICO_VOL;
+};
+
+/* ---------- Utilidades de red ---------- */
+function jsonp(url, timeout = 6000){
+  return new Promise((ok, fail) => {
+    const cb = "cb" + Math.random().toString(36).slice(2);
+    const s = document.createElement("script");
+    const t = setTimeout(() => { fin(); fail("timeout"); }, timeout);
+    function fin(){ clearTimeout(t); delete window[cb]; s.remove(); }
+    window[cb] = d => { fin(); ok(d); };
+    s.onerror = () => { fin(); fail("error"); };
+    s.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
+    document.body.appendChild(s);
+  });
+}
+async function leerJSON(url, timeout = 6000){
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const r = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+    if (!r.ok) throw r.status;
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+const sinCache = u => u + (u.includes("?") ? "&" : "?") + "t=" + Date.now();
+const decodificar = s => (s || "").replace(/&apos;|&#39;/g, "'").replace(/&quot;/g, '"')
+                                  .replace(/&amp;/g, "&").replace(/\s{2,}/g, " ").trim();
+
+/* Cada fuente devuelve {artista, titulo, oyentes?, estacion?} o lanza error */
+function deProveedor(d){
+  if (!d || !d.currentSong) throw "vacío";
+  return { artista: decodificar(d.currentArtist), titulo: decodificar(d.currentSong) };
+}
+function deStats(d){
+  if (!d || !d.songtitle) throw "vacío";
+  return { texto: decodificar(d.songtitle), oyentes: d.currentlisteners, estacion: d.servertitle };
+}
+/* Icecast: /status-json.xsl */
+function deIcecast(d){
+  let s = d && d.icestats && d.icestats.source;
+  if (!s) throw "vacío";
+  if (Array.isArray(s)) s = s.find(x => (x.listenurl || "").endsWith("/stream")) || s[0];
+  const titulo = decodificar(s.title), artista = decodificar(s.artist);
+  if (!titulo) throw "vacío";
+  return artista ? { artista, titulo, oyentes: s.listeners, estacion: s.server_name }
+                 : { texto: titulo, oyentes: s.listeners, estacion: s.server_name };
+}
+/* Respuesta de la función propia (api/cancion o meta-proxy.php) */
+function dePropio(d){
+  if (!d || !d.cancion) throw "vacío";
+  return { texto: decodificar(d.cancion), oyentes: d.oyentes };
+}
+
+/* Lee el título incrustado en el propio audio (metadatos ICY) */
+async function deStreamICY(){
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 12000);
+  try {
+    const r = await fetch(STREAM + "?meta=" + Date.now(), { headers: { "Icy-MetaData": "1" }, cache: "no-store", signal: ctrl.signal });
+    const metaint = parseInt(r.headers.get("icy-metaint"), 10);
+    if (!metaint || !r.body) throw "sin metadatos";
+    const lector = r.body.getReader();
+    let buf = new Uint8Array(0), bloques = 0;
+    while (bloques < 4){
+      const { value, done } = await lector.read();
+      if (done) throw "fin";
+      const n = new Uint8Array(buf.length + value.length); n.set(buf); n.set(value, buf.length); buf = n;
+      while (buf.length > metaint){
+        const largo = buf[metaint] * 16;
+        if (buf.length < metaint + 1 + largo) break;
+        const meta = buf.slice(metaint + 1, metaint + 1 + largo);
+        buf = buf.slice(metaint + 1 + largo); bloques++;
+        if (largo){
+          let txt;
+          try { txt = new TextDecoder("utf-8", { fatal: true }).decode(meta); }
+          catch(e){ txt = new TextDecoder("iso-8859-1").decode(meta); }
+          const m = txt.match(/StreamTitle='(.*?)';/);
+          if (m && m[1].trim()){ ctrl.abort(); return { texto: decodificar(m[1]) }; }
+        }
+      }
+    }
+    throw "sin título";
+  } finally { clearTimeout(t); }
+}
+
+const FUENTES = [];
+if (META_PROPIO) FUENTES.push(async () => dePropio(await leerJSON(sinCache(META_PROPIO))));
+FUENTES.push(async () => dePropio(await leerJSON(sinCache("api/cancion"))));   // si está publicado en Vercel
+FUENTES.push(async () => deIcecast(await leerJSON(sinCache(SERVER + "/status-json.xsl"))));
+FUENTES.push(async () => deProveedor(await leerJSON(sinCache(PROVEEDOR))));
+FUENTES.push(async () => deStats(await jsonp(STATS)));
+FUENTES.push(deStreamICY);
+for (const p of PROXIES){
+  FUENTES.push(async () => deIcecast(await leerJSON(p(sinCache(SERVER + "/status-json.xsl")))));
+  FUENTES.push(async () => deStats(await leerJSON(p(sinCache(STATS)))));
+  FUENTES.push(async () => deProveedor(await leerJSON(p(sinCache(PROVEEDOR)))));
+}
+
+let fuenteBuena = -1;   // índice de la fuente que funciona (-1 = aún no se sabe)
+async function obtenerCancion(){
+  // 1) Si ya sabemos qué fuente funciona, se usa directamente
+  if (fuenteBuena >= 0){
+    try { return await FUENTES[fuenteBuena](); } catch(e){ fuenteBuena = -1; }
+  }
+  // 2) Si no, se prueban TODAS a la vez y gana la primera que responda
+  try {
+    return await Promise.any(FUENTES.map((f, i) => f().then(
+      r => { fuenteBuena = i; console.info("[radio] canción obtenida con la fuente", i); return r; },
+      e => { console.warn("[radio] falló la fuente", i, e); throw e; }
+    )));
+  } catch(e){ return null; }
+}
+
+/* ---------- Mostrar canción ---------- */
+function separar(r){
+  if (r.titulo !== undefined) return { artista: r.artista || "", titulo: r.titulo };
+  const i = r.texto.indexOf(" - ");
+  return i > 0 ? { artista: r.texto.slice(0, i).trim(), titulo: r.texto.slice(i + 3).trim() }
+               : { artista: "", titulo: r.texto };
+}
+
+let ocupado = false;   // evita consultas superpuestas
+async function actualizar(){
+  if (ocupado) return;
+  ocupado = true;
+  let r;
+  try { r = await obtenerCancion(); } finally { ocupado = false; }
+  if (!r){ if (!cancionActual) $("titulo").textContent = "Transmisión en vivo"; return; }
+  if (!NOMBRE && r.estacion) $("estacion").textContent = decodificar(r.estacion);
+  if (r.oyentes !== undefined && r.oyentes !== null) $("oyentes").textContent = "👥 " + r.oyentes + " oyentes";
+
+  const { artista, titulo } = separar(r);
+  const clave = artista + "|" + titulo;
+  if (!titulo || clave === cancionActual) return;
+
+  // Pasa la canción anterior al historial
+  if (cancionActual && HISTORIAL > 0){
+    const [a, t] = cancionActual.split("|");
+    historial.unshift({ artista: a, titulo: t, hora: new Date() });
+    historial.length = Math.min(historial.length, HISTORIAL);
+    pintarHistorial();
+  }
+  cancionActual = clave;
+
+  const info = $("info");
+  info.classList.remove("cambio"); void info.offsetWidth; info.classList.add("cambio");
+  $("titulo").textContent = titulo;
+  $("artista").textContent = artista || " ";
+  document.title = titulo + (artista ? " – " + artista : "") + " | " + $("estacion").textContent;
+
+  if ("mediaSession" in navigator){
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: titulo, artist: artista, album: $("estacion").textContent
+    });
+  }
+}
+
+function pintarHistorial(){
+  const lista = $("lista");
+  lista.innerHTML = "";
+  for (const h of historial){
+    const li = document.createElement("li");
+    const hora = h.hora.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    li.innerHTML = '<span class="hora"></span><div class="txt"><div class="t"></div><div class="a"></div></div>';
+    li.querySelector(".hora").textContent = hora;
+    li.querySelector(".t").textContent = h.titulo;
+    li.querySelector(".a").textContent = h.artista;
+    lista.appendChild(li);
+  }
+  $("historial").hidden = historial.length === 0;
+}
+
+if ("mediaSession" in navigator){
+  navigator.mediaSession.setActionHandler("play",  reproducir);
+  navigator.mediaSession.setActionHandler("pause", detener);
+  navigator.mediaSession.setActionHandler("stop",  detener);
+}
+
+actualizar();
+setInterval(actualizar, REFRESCO);
+</script>
+</body>
+</html>
