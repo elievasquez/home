@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Radio en vivo 2.1</title>
+<title>Radio en vivo 2.2</title>
 <meta name="theme-color" content="#0f0f17">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -222,7 +222,7 @@ function jsonp(url, timeout = 6000){
     document.body.appendChild(s);
   });
 }
-async function leerJSON(url, timeout = 7000){
+async function leerJSON(url, timeout = 6000){
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeout);
   try {
@@ -257,13 +257,16 @@ for (const p of PROXIES){
   FUENTES.push(async () => deProveedor(await leerJSON(p(sinCache(PROVEEDOR)))));
 }
 
-let fuenteBuena = 0;   // índice de la última fuente que funcionó
+let fuenteBuena = -1;   // índice de la fuente que funciona (-1 = aún no se sabe)
 async function obtenerCancion(){
-  for (let n = 0; n < FUENTES.length; n++){
-    const i = (fuenteBuena + n) % FUENTES.length;
-    try { const r = await FUENTES[i](); fuenteBuena = i; return r; } catch(e){}
+  // 1) Si ya sabemos qué fuente funciona, se usa directamente
+  if (fuenteBuena >= 0){
+    try { return await FUENTES[fuenteBuena](); } catch(e){ fuenteBuena = -1; }
   }
-  return null;
+  // 2) Si no, se prueban TODAS a la vez y gana la primera que responda
+  try {
+    return await Promise.any(FUENTES.map((f, i) => f().then(r => { fuenteBuena = i; return r; })));
+  } catch(e){ return null; }
 }
 
 /* ---------- Mostrar canción ---------- */
@@ -274,8 +277,12 @@ function separar(r){
                : { artista: "", titulo: r.texto };
 }
 
+let ocupado = false;   // evita consultas superpuestas
 async function actualizar(){
-  const r = await obtenerCancion();
+  if (ocupado) return;
+  ocupado = true;
+  let r;
+  try { r = await obtenerCancion(); } finally { ocupado = false; }
   if (!r){ if (!cancionActual) $("titulo").textContent = "Transmisión en vivo"; return; }
   if (!NOMBRE && r.estacion) $("estacion").textContent = decodificar(r.estacion);
   if (r.oyentes !== undefined && r.oyentes !== null) $("oyentes").textContent = "👥 " + r.oyentes + " oyentes";
@@ -296,7 +303,7 @@ async function actualizar(){
   const info = $("info");
   info.classList.remove("cambio"); void info.offsetWidth; info.classList.add("cambio");
   $("titulo").textContent = titulo;
-  $("artista").textContent = artista || " ";
+  $("artista").textContent = artista || " ";
   document.title = titulo + (artista ? " – " + artista : "") + " | " + $("estacion").textContent;
 
   if ("mediaSession" in navigator){
