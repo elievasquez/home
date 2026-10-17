@@ -124,6 +124,7 @@ const STREAM  = "https://pstnet4.shoutcastnet.com:40174/stream";
 const SERVER  = "https://pstnet4.shoutcastnet.com:40174";
 const NOMBRE  = "";        // Nombre de tu emisora. Vacío = usa el del servidor
 const REFRESCO = 15000;    // cada cuánto se actualiza la canción (ms)
+const LOGO    = "";        // URL del logo de tu emisora (se muestra si no hay portada)
 
 const $ = id => document.getElementById(id);
 const audio = $("audio");
@@ -223,23 +224,68 @@ function mostrarCancion(texto){
   }
 }
 
+/* Limpia el texto: quita (remix), [live], feat., +, símbolos, etc. */
+function limpiar(t){
+  return (t || "")
+    .replace(/\(.*?\)|\[.*?\]/g, " ")
+    .replace(/\b(feat\.?|ft\.?|featuring|remix|version|versión|live|en vivo|official|video|audio)\b.*$/i, " ")
+    .replace(/[+&|/_*#~"“”]/g, " ")
+    .replace(/\s+/g, " ").trim();
+}
+
+/* Busca en iTunes */
+async function portadaItunes(q){
+  const r = await jsonp("https://itunes.apple.com/search?term=" + encodeURIComponent(q) + "&media=music&limit=1");
+  const x = r.results && r.results[0];
+  return x && x.artworkUrl100 ? x.artworkUrl100.replace("100x100bb", "600x600bb").replace("100x100", "600x600") : null;
+}
+/* Busca en Deezer (respaldo) */
+async function portadaDeezer(q, soloArtista){
+  if (soloArtista){
+    const r = await jsonp("https://api.deezer.com/search/artist?q=" + encodeURIComponent(q) + "&limit=1&output=jsonp");
+    return r.data && r.data[0] ? r.data[0].picture_xl : null;
+  }
+  const r = await jsonp("https://api.deezer.com/search?q=" + encodeURIComponent(q) + "&limit=1&output=jsonp");
+  return r.data && r.data[0] && r.data[0].album ? r.data[0].album.cover_xl : null;
+}
+
 async function buscarPortada(artista, titulo){
+  const a = limpiar(artista), t = limpiar(titulo);
+  const primeraPalabra = t.split(" ")[0] || "";
+  // Del intento más preciso al más general
+  const intentos = [
+    () => portadaItunes(a + " " + t),
+    () => portadaDeezer(a + " " + t),
+    () => portadaItunes(a + " " + primeraPalabra),
+    () => portadaDeezer(a + " " + primeraPalabra),
+    () => portadaItunes(t),
+    () => a ? portadaDeezer(a, true) : null   // al menos la foto del artista
+  ];
+  for (const intento of intentos){
+    if (texto_cambio(artista, titulo)) return;       // ya cambió de canción
+    try { const url = await intento(); if (url) return ponerPortada(url); } catch(e){}
+  }
+  ponerPortada(LOGO || null);
+}
+function texto_cambio(artista, titulo){
+  return cancionActual !== (artista ? artista + " - " + titulo : titulo);
+}
+
+function ponerPortada(url){
   const cover = $("cover");
-  try {
-    const q = encodeURIComponent((artista + " " + titulo).replace(/\(.*?\)|\[.*?\]/g, ""));
-    const r = await jsonp("https://itunes.apple.com/search?term=" + q + "&entity=song&limit=1");
-    if (r.results && r.results[0]){
-      const url = r.results[0].artworkUrl100.replace("100x100", "600x600");
-      cover.onload = () => { cover.style.opacity = 1; $("icono").style.opacity = 0; };
-      cover.src = url;
-      $("bg").style.backgroundImage = "url('" + url + "')";
-      if ("mediaSession" in navigator && navigator.mediaSession.metadata){
-        navigator.mediaSession.metadata.artwork = [{ src: url, sizes: "600x600", type: "image/jpeg" }];
-      }
-      return;
+  if (!url){
+    cover.style.opacity = 0; $("icono").style.opacity = .9; $("bg").style.backgroundImage = ""; return;
+  }
+  const img = new Image();
+  img.onload = () => {
+    cover.src = url; cover.style.opacity = 1; $("icono").style.opacity = 0;
+    $("bg").style.backgroundImage = "url('" + url + "')";
+    if ("mediaSession" in navigator && navigator.mediaSession.metadata){
+      navigator.mediaSession.metadata.artwork = [{ src: url, sizes: "600x600", type: "image/jpeg" }];
     }
-  } catch(e){}
-  cover.style.opacity = 0; $("icono").style.opacity = .9; $("bg").style.backgroundImage = "";
+  };
+  img.onerror = () => { if (url !== LOGO && LOGO) ponerPortada(LOGO); };
+  img.src = url;
 }
 
 if ("mediaSession" in navigator){
@@ -248,6 +294,7 @@ if ("mediaSession" in navigator){
   navigator.mediaSession.setActionHandler("stop",  detener);
 }
 
+if (LOGO) ponerPortada(LOGO);
 actualizar();
 setInterval(actualizar, REFRESCO);
 </script>
